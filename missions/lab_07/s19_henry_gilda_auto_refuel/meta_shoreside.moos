@@ -1,0 +1,131 @@
+//*******************************************************
+// ShoreSide Configuration File
+
+ServerHost = localhost
+ServerPort = $(VPORT)
+Community  = $(VNAME)
+
+//#include "XYPoint.h"   
+#include plug_origin_warp.moos
+  
+//--------------------------------------------------------
+Processconfig = ANTLER
+{
+  MSBetweenLaunches = 100
+
+  Run = MOOSDB          @ NewConsole = false
+  Run = pRealm          @ NewConsole = false
+  Run = pMarineViewer   @ NewConsole = false
+  Run = pLogger         @ NewConsole = false
+  Run = pShare          @ NewConsole = false
+  Run = pHostInfo       @ NewConsole = false
+  Run = uFldShoreBroker @ NewConsole = false
+  Run = pRealm          @ NewConsole = false
+  Run = uTimerScript    @ NewConsole = false
+  Run = pPointAssign    @ NewConsole = false
+  Run = uTimerScript    @ NewConsole = false
+  RUN = pGenPath        @ NewConsole = false
+}
+
+#include plug_pShare.moos
+#include plug_pHostInfo.moos
+#include plug_pLogger.moos
+
+//--------------------------------------------------
+// pPointAssign Configuration Block
+
+ProcessConfig = pPointAssign 
+{
+  AppTick = 4
+  vname = henry
+  vname = gilda
+  assign_by_region = false
+}
+
+//--------------------------------------------------
+// uFldShoreBroker Configuration Block
+
+ProcessConfig = uFldShoreBroker
+{
+  AppTick       = 1
+  CommsTick     = 1
+
+  qbridge  = DEPLOY, NODE_REPORT
+  qbridge  = STATION_KEEP, APPCAST_REQ
+  qbridge  = MOOS_MANUAL_OVERRIDE
+  qbridge  = REFUEL_NEEDED, REF_POSI
+  qbridge  = VISIT_POINT
+
+
+  bridge   = src=RETURN_ALL, alias=RETURN
+  bridge   = src=RETURN_$V,  alias=RETURN
+  bridge   = src=VISIT_POINT_HENRY, alias=VISIT_POINT
+  bridge   = src=VISIT_POINT_GILDA, alias=VISIT_POINT
+}
+
+//---------------------------------------------------------
+// uTimerScript configuration block (generates 100 points)
+ProcessConfig = uTimerScript
+{
+  AppTick   = 4
+  CommsTick = 4
+
+ // Ορισμός τυχαίων μεταβλητών για τις συντεταγμένες X και Y [1, 4]
+ // Χρησιμοποιούμε snap=1 για ακέραιες τιμές [5]
+  
+  rand_var = varname=XVAL, min=-25,  max=200, key=at_post, snap=1
+  rand_var = varname=YVAL, min=-175, max=-25, key=at_post, snap=1
+
+ // Παραγωγή 100 τυχαίων σημείων χρησιμοποιώντας τις rand_var [6, 7]
+ // Το $[TCOUNT] παρέχει ένα μοναδικό ID για κάθε σημείο [8]
+
+  event = var=VISIT_POINT, val="firstpoint", time=0   // Πρώτο μήνυμα ένδειξης έναρξης ακολουθίας [6]
+  
+  event = var=VISIT_POINT, val="x=$[XVAL], y=$[YVAL], id=$[TCOUNT]", time=0, amt=100
+
+  event = var=VISIT_POINT, val="lastpoint", time=0   // Τελευταίο μήνυμα ένδειξης ολοκλήρωσης [6]
+
+ // Ρυθμίσεις επαναφοράς αν απαιτείται επανάληψη της διαδικασίας [9, 10]
+  
+  reset_max  = nolimit
+  reset_time = none
+}
+
+//-------------------------------------------------------
+ProcessConfig = pMarineViewer
+{
+  AppTick    = 4
+  CommsTick  = 4
+
+  tiff_file            = forrest19.tif
+  set_pan_x            = -90
+  set_pan_y            = -280
+  zoom                 = 0.65
+  vehicles_shape_scale = 1.5
+  vehicles_name_mode   = names+shortmode
+
+	nodes_font_size = xlarge
+	procs_font_size = xlarge
+	appcast_font_size = large
+	
+  point_viewable_labels   = false
+  polygon_viewable_labels = false
+  appcast_viewable     = true
+  appcast_color_scheme = indigo
+  hash_delta           = 50
+  hash_viewable        = true
+  hash_shade           = 0.35
+
+  scope = PHI_HOST_INFO
+
+  button_one   = DEPLOY  # DEPLOY_ALL=true # REF_POSI_ALL=false
+  button_one   = MOOS_MANUAL_OVERRIDE_ALL=false 
+  button_one   = RETURN_ALL=false # STATION_KEEP_ALL=false # REFUEL_NEEDED_ALL=false
+
+  button_two   = RETURN  # RETURN_ALL=true
+  button_two   = STATION_KEEP_ALL=false
+
+  button_three = STATION  # STATION_KEEP_ALL=true
+
+  button_four = REFUEL # REFUEL_NEEDED_ALL=true # LOITER=false
+}
