@@ -38,8 +38,8 @@ ProcessConfig = pPointAssign
   AppTick = 4
   CommsTick = 4
 
-  vname = henry
-  vname = gilda
+  vname = HENRY
+  vname = GILDA
   assign_by_region = true
 }
 
@@ -83,8 +83,8 @@ ProcessConfig = uFldShoreBroker
 
   bridge   = src=RETURN_ALL, alias=RETURN
   bridge   = src=RETURN_$V,  alias=RETURN
-  bridge   = src=VISIT_POINT_HENRY, alias=VISIT_POINT
-  bridge   = src=VISIT_POINT_GILDA, alias=VISIT_POINT
+//  bridge   = src=VISIT_POINT_HENRY, alias=VISIT_POINT
+//  bridge   = src=VISIT_POINT_GILDA, alias=VISIT_POINT
 }
 
 //---------------------------------------------------------

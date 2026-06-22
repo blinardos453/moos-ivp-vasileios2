@@ -37,11 +37,11 @@ bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
   AppCastingMOOSApp::OnNewMail(NewMail);
 
   MOOSMSG_LIST::iterator p;
-  for(p=NewMail.begin(); p!=NewMail.end(); p++) 
+  for (p = NewMail.begin(); p != NewMail.end(); p++)
   {
-    
+
     CMOOSMsg &msg = *p;
-    string key    = msg.GetKey();
+    string key = msg.GetKey();
 
 #if 0 // Keep these around just for template
     string comm  = msg.GetCommunity();
@@ -53,60 +53,84 @@ bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
     bool   mstr  = msg.IsString();
 #endif
 
-    if (key == "VISIT_POINT")            //
-    {                                    //
-      string sval = msg.GetString();     //
+    if (key == "VISIT_POINT")        //
+    {                                //
+      string sval = msg.GetString(); //
 
       // 1. Χειρισμός Bookend Μηνυμάτων [4, 5]
-      if (sval == "firstpoint" || sval == "lastpoint")    //
-      {                                                   //
-        for (string vname : m_vnames)                     //
-        {                                                 //
-         Notify("VISIT_POINT_" + vname, sval);            //
-        }                                                 //
-      }                                                   //
+      if (sval == "firstpoint" || sval == "lastpoint") //
+      {                                                //
+        for (string vname : m_vnames)                  //
+        {                                              //
+          Notify("VISIT_POINT_" + vname, sval);        //
+        } //
+      } //
       // 2. Χειρισμός Δεδομένων Συντεταγμένων
-      else                                                //
-      {                                                   //
-        unsigned int index = 0;                           //
-        if (m_assign_by_region==true)                           //
-        {                                                 //
-          // Διανομή βάσει περιοχής: Το μέσο X είναι 87.5 για το εύρος -25 έως 200 [5, 8]
-          XYPoint point;                                  //
-          point.get_spec(sval);                           //set.spec
-          index = (point.get_vx() < 87.5) ? 0 : 1;         //get_x
-        }                                                 //
-        else                                              //
-        {                                                 //
-          // Εναλλασσόμενη διανομή (Alternating) για 50-50 μοίρασμα [5]
-          index = m_point_count % m_vnames.size();        //
-        }                                                 //
+      else //
+      {    //
+        //   unsigned int index = 0;                           //
+        //   if (m_assign_by_region==true)                           //
+        //   {                                                 //
+        //     // Διανομή βάσει περιοχής: Το μέσο X είναι 87.5 για το εύρος -25 έως 200 [5, 8]
+        //     XYPoint point;                                  //
+        //     point.get_spec(sval);                           //set.spec
+        //     index = (point.get_vx() < 87.5) ? 0 : 1;         //get_x
+        //   }                                                 //
+        //   else                                              //
+        //   {                                                 //
+        //     // Εναλλασσόμενη διανομή (Alternating) για 50-50 μοίρασμα [5]
+        //     index = m_point_count % m_vnames.size();        //
+        //   }                                                 //
 
-        if (index < m_vnames.size())                      //
-        {                                                 //
-          Notify("VISIT_POINT_" + m_vnames[index], sval);    //
-          m_point_count++;                                 //
-        }                                                 //
-      }                                                   //
-    }                                                     //
+        //  if (index < m_vnames.size())                      //
+        //  {                                                 //
+        //    Notify("VISIT_POINT_" + m_vnames[index], sval);    //
+        //    m_point_count++;                                 //
+        //  }                                                 //
 
-    else if(key == "FOO") 
-      cout << "great!";
+        if (!m_assign_by_region)
+        {
+          if (m_vnames.size() > 0)
+          {
+            Notify("VISIT_POINT_" + m_vnames[m_point_count % m_vnames.size()], sval);
+            m_point_count++;
+          }
+        }
+        else
+        {
+          XYPoint point = string2Point(sval); // Μετατροπή string σε XYPoint [2]
+          if (point.valid())
+          {
+            double mid_x = 87.5;                     // Μέσο X για το εύρος -25 έως 200 [5, 8]
+            int index = (point.x() < mid_x) ? 0 : 1; // Ανάθεση βάσει περιοχής
+            if (index < m_vnames.size())
+            {
+              Notify("VISIT_POINT_" + m_vnames[index], sval);
+              m_point_count++;
+            }
+          }
+        } //
+      } //
+    }
 
-    else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
+    else if (key == "FOO")
+      cout
+          << "great!";
+
+    else if (key != "APPCAST_REQ") // handled by AppCastingMOOSApp
       reportRunWarning("Unhandled Mail: " + key);
   }
-	
-  return(true);
+
+  return (true);
 }
 
-//---------------------------------------------------------
+//-------------------------------->-------------------------
 // Procedure: OnConnectToServer()
 
 bool PointAssign::OnConnectToServer()
 {
-   registerVariables();
-   return(true);
+  registerVariables();
+  return (true);
 }
 
 //---------------------------------------------------------
@@ -118,7 +142,7 @@ bool PointAssign::Iterate()
   AppCastingMOOSApp::Iterate();
   // Do your thing here!
   AppCastingMOOSApp::PostReport();
-  return(true);
+  return (true);
 }
 
 //---------------------------------------------------------
@@ -131,45 +155,45 @@ bool PointAssign::OnStartUp()
 
   STRING_LIST sParams;
   m_MissionReader.EnableVerbatimQuoting(false);
-  m_MissionReader.GetConfiguration(GetAppName(), sParams);     //
-  if(!m_MissionReader.GetConfiguration(GetAppName(), sParams))
+  m_MissionReader.GetConfiguration(GetAppName(), sParams); //
+  if (!m_MissionReader.GetConfiguration(GetAppName(), sParams))
     reportConfigWarning("No config block found for " + GetAppName());
 
   STRING_LIST::iterator p;
-  for(p=sParams.begin(); p!=sParams.end(); p++) {
- // for(std::string line : sParams) {
-    string orig  = *p;
-    string line  = *p;
+  for (p = sParams.begin(); p != sParams.end(); p++)
+  {
+    // for(std::string line : sParams) {
+    string orig = *p;
+    string line = *p;
     string param = tolower(biteStringX(line, '='));
     string value = line;
 
-    
-
     bool handled = false;
-    if(param == "foo") {
+    if (param == "foo")
+    {
       handled = true;
     }
-    else if(param == "bar") {
+    else if (param == "bar")
+    {
       handled = true;
     }
-    else if (param == "vname") 
-    {         //
-      m_vnames.push_back(tolower(value)); // Προσθήκη HENRY, GILDA [5]
+    else if (param == "vname")
+    {                                     //
+      m_vnames.push_back(toupper(value)); // Προσθήκη HENRY, GILDA [5]
       handled = true;
-    } 
-    else if (param == "assign_by_region") 
-    {     //
-      m_assign_by_region = (tolower(value) == "true");   //
+    }
+    else if (param == "assign_by_region")
+    {                                                  //
+      m_assign_by_region = (tolower(value) == "true"); //
       handled = true;
-    }    //
+    } //
 
-    if(!handled)
+    if (!handled)
       reportUnhandledConfigWarning(orig);
-
   }
-  //Register("VISIT_POINT", 0);        //enter in final
-  registerVariables();	
-  return(true);
+  // Register("VISIT_POINT", 0);        //enter in final
+  registerVariables();
+  return (true);
 }
 
 //---------------------------------------------------------
@@ -178,27 +202,27 @@ bool PointAssign::OnStartUp()
 void PointAssign::registerVariables()
 {
   AppCastingMOOSApp::RegisterVariables();
-  Register("VISIT_POINT", 0);        //
+  Register("VISIT_POINT", 0); //
 }
-
 
 //---------------------------------------------------------
 // Procedure: Variables compantible to pMarineViewer
 
-void PointAssign::postViewPoint(double x, double y, string label, string color) {
- XYPoint point(x, y);
- point.set_label(label);          // Χρήση του ID του σημείου ως μοναδικό label [2]
- point.set_color("vertex",color); // Επιλογή χρώματος ανά όχημα για διάκριση [2]
- point.set_param("vertex_size", "4");
- 
- string spec = point.get_spec();   // Μετατροπή σε string spec [2]
-  Notify("VIEW_POINT", spec);       // Δημοσίευση στο MOOSDB [2]
+void PointAssign::postViewPoint(double x, double y, string label, string color)
+{
+  XYPoint point(x, y);
+  point.set_label(label);           // Χρήση του ID του σημείου ως μοναδικό label [2]
+  point.set_color("vertex", color); // Επιλογή χρώματος ανά όχημα για διάκριση [2]
+  point.set_param("vertex_size", "4");
+
+  string spec = point.get_spec(); // Μετατροπή σε string spec [2]
+  Notify("VIEW_POINT", spec);     // Δημοσίευση στο MOOSDB [2]
 }
 
 //------------------------------------------------------------
 // Procedure: buildReport()
 
-bool PointAssign::buildReport() 
+bool PointAssign::buildReport()
 {
   m_msgs << "============================================" << endl;
   m_msgs << "File:                                       " << endl;
@@ -209,13 +233,16 @@ bool PointAssign::buildReport()
   actab.addHeaderLines();
   actab << "one" << "two" << "three" << "four";
   m_msgs << actab.getFormattedString();
-  m_msgs << "Registered Vehicles: " << m_vnames.size() << endl;  //
-  m_msgs << "Points Distributed: " << m_point_count << endl;     //
-  m_msgs << "Mode: " << (m_assign_by_region ? "Region" : "Alternating") << endl;   //
+  m_msgs << "Registered Vehicles: " << m_vnames.size() << endl;                  //
+  m_msgs << "Points Distributed: " << m_point_count << endl;                     //
+  m_msgs << "Mode: " << (m_assign_by_region ? "Region" : "Alternating") << endl; //
+  for (auto vname : m_vnames)
+  {
+    m_msgs << "  - " << vname << endl;
+  }
 
-  return(true);
+  // by region
+  m_msgs << "Region Assignment: " << m_assign_by_region << endl; //
+
+  return (true);
 }
-
-
-
-

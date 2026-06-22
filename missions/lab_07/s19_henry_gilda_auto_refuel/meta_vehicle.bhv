@@ -54,7 +54,7 @@ Behavior = BHV_Waypoint   //Loiter  4.1
   pwt       = 100
   
   condition = MODE==SURVEYING
-  condition = GENPATH_READY = true
+  //condition = GENPATH_READY = true
   updates = GENPATH_UPDATES  //4.1 WAYPOINT_UPDATE kvst
 
   perpetual = true

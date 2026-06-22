@@ -12,6 +12,7 @@
 #include <string>
 #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"
 #include "XYPoint.h"
+#include "XYFormatUtilsPoint.h"
 
 class PointAssign : public AppCastingMOOSApp
 {
