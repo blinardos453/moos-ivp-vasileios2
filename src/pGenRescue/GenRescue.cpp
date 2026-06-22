@@ -1,8 +1,8 @@
 /************************************************************/
-/*    NAME: Mike Benjamin                                   */
+/*    NAME: Vasileios Linardos                              */
 /*    ORGN: MIT                                             */
 /*    FILE: GenRescue.cpp                                   */
-/*    DATE: April 18th, 2022                                */
+/*    DATE: June 23th, 2026                                 */
 /************************************************************/
 
 #include <iterator>
@@ -85,7 +85,7 @@ bool GenRescue::Iterate()
   
   //if(m_plan_pending)
   if((m_iteration % 20) == 0)
-   // postShortestPath();
+  //  postShortestPath();
 
   AppCastingMOOSApp::PostReport();
   return(true);
