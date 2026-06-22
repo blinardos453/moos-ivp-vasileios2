@@ -73,9 +73,7 @@ bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
         //   {                                                 //
         //     // Διανομή βάσει περιοχής: Το μέσο X είναι 87.5 για το εύρος -25 έως 200 [5, 8]
         //     XYPoint point;                                  //
-        //     point.get_spec(sval);                           //set.spec
-        //     index = (point.get_vx() < 87.5) ? 0 : 1;         //get_x
-        //   }                                                 //
+        //     point.get_spec(sval);         SOS IT DOES NOT WORK (put values under 87)     //
         //   else                                              //
         //   {                                                 //
         //     // Εναλλασσόμενη διανομή (Alternating) για 50-50 μοίρασμα [5]
