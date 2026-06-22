@@ -14,12 +14,16 @@ Processconfig = ANTLER
 
   Run = MOOSDB          @ NewConsole = false
   Run = pRealm          @ NewConsole = false
-  Run = pMarineViewer   @ NewConsole = false
+  Run = uSimMarineV22   @ NewConsole = false  //kvst
   Run = pLogger         @ NewConsole = false
+  Run = pNodeReporter   @ NewConsole = false   //kvst
+  Run = pMarinePIDV22   @ NewConsole = false   //kvst
+  Run = pHelmIvP        @ NewConsole = false   //kvst
   Run = pShare          @ NewConsole = false
   Run = pHostInfo       @ NewConsole = false
   Run = uFldShoreBroker @ NewConsole = false
   Run = pRealm          @ NewConsole = false
+
 }
 
 #include plug_pShare.moos

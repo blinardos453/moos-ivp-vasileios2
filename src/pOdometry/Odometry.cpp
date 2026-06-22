@@ -25,7 +25,8 @@ Odometry::Odometry()
  m_previous_x = 0.0;
  m_previous_y = 0.0;
  m_total_distance = 0.0;
- 
+ //m_
+ //depth_thresh = 0.0;
 
 }
 

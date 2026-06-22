@@ -10,7 +10,7 @@
 initialize   DEPLOY  = true
 initialize   RETURN  = false
 initialize   STATION_KEEP = false
-initialize   LOITER  = true
+initialize   SURVEY  = true
 initialize   REFUEL_NEEDED = false
 initialize   REF_POSI = false
 initialize   TIMER_RESET = true
@@ -32,7 +32,7 @@ set MODE = RETURNING {
 
 set MODE = SURVEYING {
   MODE = ACTIVE
-  LOITER = true
+  SURVEY = true
 } 
 
 set MODE = REFUELING {
@@ -52,29 +52,25 @@ Behavior = BHV_Waypoint   //Loiter  4.1
 {
   name      = waypt_follow
   pwt       = 100
-   updates = GENPATH_UPDATES  //4.1
+  
   condition = MODE==SURVEYING
- 
+  condition = GENPATH_READY = true
+  updates = GENPATH_UPDATES  //4.1 WAYPOINT_UPDATE kvst
+
   perpetual = true
 
    
-         speed = 3.0
-     clockwise = false
-        radius = 1.2
-     nm_radius = 5.0
-       polygon = radial::$(LOITER_POS), radius=20, pts=8, snap=1, label=$(VNAME)_LOITER
-
-       visual_hints = nextpt_color=white, nextpt_lcolor=khaki
-       visual_hints = edge_color=orange, vertex_color=white
-       visual_hints = edge_size=1, vertex_size=2
-
+    speed = 3.0
+    radius = 1.2
+    slip_radius = 15.0
+   
   duration   = 600                     // 300 δευτερόλεπτα "καυσίμου" [3]
   duration_idle_decay = false          // Παύση ρολογιού όταν είναι Idle [4]
   perpetual  = true                    // Επιτρέπει την επανεκκίνηση [6, 7]
   
   // Όταν αδειάσει το "ντεπόζιτο"
   endflag    = REFUEL_NEEDED = true    // Ενεργοποίηση mode ανεφοδιασμού [5]
-  endflag    = LOITER = false           
+  endflag    = SURVEY = false           
   
   // Επαναφορά χρονοδιακόπτη μετά τον ανεφοδιασμό
   duration_reset = REFUEL_COMPLETE = true
@@ -93,7 +89,7 @@ Behavior = BHV_Waypoint
       speed = 1.3
      radius = 3.0
   nm_radius = 25.0
-     points = $(START_POS)
+     points = $(START_POS)  //points = 40,40
        lead = 8
 }
 
@@ -151,7 +147,7 @@ Behavior = BHV_StationKeep
   duration_idle_decay = false
   perpetual = true
 
-  endflag   = LOITER  = true
+  endflag   = SURVEY  = true
   endflag   = REF_POSI  = false
   duration_reset = TIMER_RESET = true
 
@@ -168,7 +164,7 @@ Behavior = BHV_Timer
   
   // Όταν αδειάσει το "ντεπόζιτο"
   endflag    = REFUEL_NEEDED = true    // Ενεργοποίηση mode ανεφοδιασμού [5]
-  endflag    = LOITER = false           // Εντολή επιστροφής στη βάση
+  endflag    = SURVEY = false           // Εντολή επιστροφής στη βάση
   
   // Επαναφορά χρονοδιακόπτη μετά τον ανεφοδιασμό
   duration_reset = REFUEL_COMPLETE = true [8, 9]

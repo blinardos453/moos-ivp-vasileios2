@@ -1,0 +1,303 @@
+//--------    FILE: bravo.bhv   -------------
+
+initialize   DEPLOY = false
+initialize   RETURN = false
+initialize  LOITER_REGION = west
+initialize  TIMER_RESET = true
+initialize  STATION_KEEP = false
+initialize   STAT_TIM = false
+
+
+	
+  set MODE = ACTIVE 
+  {
+  DEPLOY = true
+  } INACTIVE
+
+  set MODE = RETURNING 
+  {
+  MODE = ACTIVE
+  RETURN = true
+  } 
+
+  set MODE = LOITERING_WEST 
+  {
+  MODE = ACTIVE
+  LOITER_REGION = west
+  } 
+
+  set MODE = LOITERING_EAST 
+  {
+  MODE = ACTIVE
+  LOITER_REGION = east
+  } 
+
+  set MODE = STATION-KEEPING
+  {
+  //MODE = ACTIVE
+  STATION_KEEP = true
+  } 
+
+  set MODE = STATION-PAUSING
+  {
+  //MODE = STATION-KEEPING
+  STAT_TIM = true
+  } 
+  
+
+//-------------------------------------------
+Behavior = BHV_Loiter
+ {
+   // General Behavior Parameters
+   // ---------------------------
+   name         = bravo_loiter_west          
+   pwt          = 100                   
+   condition    = MODE==LOITERING_WEST      
+
+   condition = RETURN = false
+   condition = DEPLOY = true
+   
+   updates      = LOITER_UPDATES        // example
+
+   // Parameters specific to this behavior
+   // ------------------------------------
+      acquire_dist = 10               // default
+      capture_radius = 3                // default  
+      center_activate = false            // default
+      clockwise = false             
+      slip_radius = 15               // default
+      speed = 2.5                // default
+      spiral_factor = -2               // default
+  
+     
+     polygon = format=radial, x=100,y=-75,radius=30,pts=8  // example
+         
+     visual_hints = vertex_size  = 1             // default
+     visual_hints = edge_size    = 1             // default
+     visual_hints = vertex_color = dodger_blue   // default
+     visual_hints = edge_color   = red           // default
+     visual_hints = nextpt_color = yellow        // default
+     visual_hints = nextpt_lcolor = aqua         // default
+     visual_hints = nextpt_vertex_size = 5       // default
+     visual_hints = label        = zone2         // example
+
+   duration = 150
+   duration_idle_decay = false
+   perpetual  = true 
+
+   endflag   = RETURN = false
+   endflag   = LOITER_REGION = east 
+
+   duration_reset = TIMER_RESET = true
+ 
+  }
+
+
+//-------------------------------------------
+Behavior = BHV_Loiter
+ {
+   // General Behavior Parameters
+   // ---------------------------
+   name         = bravo_loiter_east          
+   pwt          = 100                   
+   condition    = MODE==LOITERING_EAST       
+
+   condition = RETURN = false
+   condition = DEPLOY = true
+   
+   updates      = LOITER_UPDATES        // example
+   
+   // Parameters specific to this behavior
+   // ------------------------------------
+      acquire_dist = 10               // default
+      capture_radius = 3                // default  
+      center_activate = false            // default
+      clockwise = false             
+      slip_radius = 15               // default
+      speed = 2.5                // default
+      spiral_factor = -2               // default
+  
+     polygon = format=radial, x=160,y=-50,radius=20,pts=8  // example
+         
+     visual_hints = vertex_size  = 1             // default
+     visual_hints = edge_size    = 1             // default
+     visual_hints = vertex_color = dodger_blue   // default
+     visual_hints = edge_color   = white         // default
+     visual_hints = nextpt_color = yellow        // default
+     visual_hints = nextpt_lcolor = aqua         // default
+     visual_hints = nextpt_vertex_size = 5       // default
+     visual_hints = label        = zone3         // example
+   
+   duration = 150
+   duration_idle_decay = false
+   perpetual  = true
+
+   endflag   = STATION_KEEP = false
+   endflag   = LOITER_REGION = west 
+
+   duration_reset = TIMER_RESET = true  
+ 
+  }
+
+//-------------------------------------------
+Behavior = BHV_ConstantDepth
+{
+  name      = bhv_const_depth_west
+  pwt       = 100
+  duration  = no-time-limit
+  condition = MODE==LOITERING_WEST // Ensures it only dives while loitering
+  depth     = 30
+}
+
+//-------------------------------------------
+Behavior = BHV_ConstantDepth
+{
+  name      = bhv_const_depth_east
+  pwt       = 100
+  duration  = no-time-limit
+  condition = MODE==LOITERING_EAST // Ensures it only dives while loitering
+  depth     = 10
+}
+
+//----------------------------------------------
+Behavior=BHV_Waypoint
+{
+ name      = waypt_return
+  pwt       = 100
+  
+  condition = MODE==RETURNING
+     //condition = STATION = false
+  perpetual = true
+  updates   = RETURN_UPDATE
+ endflag   = RETURN = false
+ endflag   = DEPLOY = false
+ endflag   = MISSION = complete
+	
+          speed = 2.5
+ capture_radius = 2.0
+    slip_radius = 8.0
+        points = 0,-20
+}
+
+//----------------------------------------------
+
+Behavior = BHV_ConstantDepth
+ {
+   // General Behavior Parameters
+   // ---------------------------
+   name         = const_dep_survey_west
+   pwt          = 100                
+   condition    = MODE==LOITERING_WEST
+   updates      = CONST_DEP_UPDATES 
+
+   // Parameters specific to this behavior
+   // ------------------------------------
+            depth = 30           
+          duration = no-time-limit 
+ }
+	
+  //----------------------------------------------
+
+Behavior = BHV_ConstantDepth
+ {
+   // General Behavior Parameters
+   // ---------------------------
+   name         = const_dep_survey_east
+   pwt          = 100                
+   condition    = MODE==LOITERING_EAST
+   updates      = CONST_DEP_UPDATES 
+
+   // Parameters specific to this behavior
+   // ------------------------------------
+    
+                depth = 10           
+               duration = no-time-limit           
+    
+ }
+
+Behavior = BHV_StationKeep
+{
+  name      = station-keep
+  pwt       = 100
+  condition = MODE==STATION-KEEPING
+
+   center_activate = true
+      inner_radius = 5
+      outer_radius = 10 
+       outer_speed = 1.0
+     transit_speed = 1.3
+        swing_time = 7
+      visual_hints = vertex_size=0, edge_color=gray50
+updates   = RETURN_UPDATE
+
+//endflag   = STATION_KEEP = false
+//endflag   = RETURN = false
+endflag   = DEPLOY = true 
+
+}
+  //----------------------------------------------
+
+Behavior = BHV_ConstantDepth
+ {
+   // General Behavior Parameters
+   // ---------------------------
+   name         = const_dep_station
+   pwt          = 100                
+   condition    = MODE==STATION-KEEPING
+   updates      = CONST_DEP_UPDATES 
+
+   // Parameters specific to this behavior
+   // ------------------------------------
+    
+                depth = 0           
+               duration = no-time-limit           
+   endflag = STAT_TIM = true
+   
+ }
+
+
+//----------------------------------------------
+Behavior = BHV_Timer
+ {
+  // General Behavior Parameters
+  // ---------------------------
+  name         = station-timer          
+  pwt          = 100                
+  condition = MODE==STATION-KEEPING          //STATION-PAUSING
+    
+  duration = 60
+  duration_idle_decay = false
+  perpetual  = true 
+updates   = RETURN_UPDATE
+
+endflag   = STATION_KEEP = false
+endflag   = RETURN = false
+endflag   = DEPLOY = true 
+endflag   = STAT_TIM = false
+
+duration_reset = TIMER_RESET = true
+}
+
+//-------------------------------------------
+Behavior = BHV_Timer
+ {
+   // General Behavior Parameters
+   // ---------------------------
+   name         = deploy-timer          
+   pwt          = 100                   
+   condition    = MODE==ACTIVE     
+   
+   duration = 200
+   duration_idle_decay = false
+   perpetual  = true 
+
+   updates   = RETURN_UPDATE
+
+   endflag   = RETURN = false
+   endflag   = DEPLOY = false 
+   endflag   = STATION_KEEP = true
+
+   duration_reset = TIMER_RESET = true
+ 
+  }
+

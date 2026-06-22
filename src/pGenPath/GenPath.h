@@ -13,7 +13,7 @@
 #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"
 #include "XYPoint.h"     //4.1
 #include "XYSegList.h"   //4.1
-#include "GenPath.h"       //4.1
+
 
 class GenPath : public AppCastingMOOSApp
 {
@@ -32,8 +32,8 @@ class GenPath : public AppCastingMOOSApp
 
  protected:
    void registerVariables();
-
- private: // Configuration variables
+     
+private: // Configuration variables
    void generatePath();     //4.1
 
  private: // State variables
@@ -42,7 +42,9 @@ class GenPath : public AppCastingMOOSApp
    double m_nav_y;                    //4.1
    bool   m_received_first;           //4.1
    bool   m_received_last;            //4.1
-
+   bool   m_path_generated;
 };
+
+   //bool buildReport();
 
 #endif 

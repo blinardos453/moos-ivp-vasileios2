@@ -39,6 +39,7 @@ bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
   MOOSMSG_LIST::iterator p;
   for(p=NewMail.begin(); p!=NewMail.end(); p++) 
   {
+    
     CMOOSMsg &msg = *p;
     string key    = msg.GetKey();
 
@@ -68,7 +69,7 @@ bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
       else                                                //
       {                                                   //
         unsigned int index = 0;                           //
-        if (m_assign_by_region)                           //
+        if (m_assign_by_region==true)                           //
         {                                                 //
           // Διανομή βάσει περιοχής: Το μέσο X είναι 87.5 για το εύρος -25 έως 200 [5, 8]
           XYPoint point;                                  //
@@ -89,7 +90,7 @@ bool PointAssign::OnNewMail(MOOSMSG_LIST &NewMail)
       }                                                   //
     }                                                     //
 
-    if(key == "FOO") 
+    else if(key == "FOO") 
       cout << "great!";
 
     else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
@@ -142,14 +143,7 @@ bool PointAssign::OnStartUp()
     string param = tolower(biteStringX(line, '='));
     string value = line;
 
-    if (param == "vname") 
-    {         //
-      m_vnames.push_back(toupper(value)); // Προσθήκη HENRY, GILDA [5]
-    } 
-    else if (param == "assign_by_region") 
-    {     //
-      m_assign_by_region = (tolower(value) == "true");   //
-    }    //
+    
 
     bool handled = false;
     if(param == "foo") {
@@ -158,6 +152,16 @@ bool PointAssign::OnStartUp()
     else if(param == "bar") {
       handled = true;
     }
+    else if (param == "vname") 
+    {         //
+      m_vnames.push_back(tolower(value)); // Προσθήκη HENRY, GILDA [5]
+      handled = true;
+    } 
+    else if (param == "assign_by_region") 
+    {     //
+      m_assign_by_region = (tolower(value) == "true");   //
+      handled = true;
+    }    //
 
     if(!handled)
       reportUnhandledConfigWarning(orig);
@@ -181,15 +185,15 @@ void PointAssign::registerVariables()
 //---------------------------------------------------------
 // Procedure: Variables compantible to pMarineViewer
 
-//void PointAssign::postViewPoint(double x, double y, string label, string color) {
- // XYPoint point(x, y);
- // point.set_label(label);          // Χρήση του ID του σημείου ως μοναδικό label [2]
- // point.set_color("vertex", color); // Επιλογή χρώματος ανά όχημα για διάκριση [2]
-  //point.set_param("vertex_size", "4");
-
- // string spec = point.get_spec();   // Μετατροπή σε string spec [2]
- // Notify("VIEW_POINT", spec);       // Δημοσίευση στο MOOSDB [2]
-//}
+void PointAssign::postViewPoint(double x, double y, string label, string color) {
+ XYPoint point(x, y);
+ point.set_label(label);          // Χρήση του ID του σημείου ως μοναδικό label [2]
+ point.set_color("vertex",color); // Επιλογή χρώματος ανά όχημα για διάκριση [2]
+ point.set_param("vertex_size", "4");
+ 
+ string spec = point.get_spec();   // Μετατροπή σε string spec [2]
+  Notify("VIEW_POINT", spec);       // Δημοσίευση στο MOOSDB [2]
+}
 
 //------------------------------------------------------------
 // Procedure: buildReport()

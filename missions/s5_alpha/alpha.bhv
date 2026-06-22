@@ -15,11 +15,11 @@ Behavior = BHV_Waypoint
   condition = DEPLOY = true
   condition = REGION = east
   
+  endflag   = SAY_MOOS = file=shipbell.wav
   endflag   = REGION = west
   endflag   = RETURN = false
   endflag   = DEPLOY = true
-  endflag   = SAY_MOOS = file=shipbell.wav
-
+  
 	endflag   = SUMMARY=speed=$[SPEED],time=$[DUR_RUN_TIME]
 	
 	configflag = CRUISE_SPD = $[SPEED]
@@ -71,10 +71,10 @@ Behavior = BHV_Waypoint
   condition = DEPLOY = true
   condition = REGION = west
 
+  endflag   = SAY_MOOS = file=buzzer.wav
   endflag   = RETURN = true
   endflag   = DEPLOY = true
-  endflag   = SAY_MOOS = say={good buy}, priority=100, voice=Albert, rate=250, source=henry     //file=buzzer.wav"
-
+  
 	endflag   = SUMMARY=speed=$[SPEED],time=$[DUR_RUN_TIME]
 	
 	configflag = CRUISE_SPD = $[SPEED]

@@ -23,6 +23,7 @@ Processconfig = ANTLER
   Run = pHostInfo       @ NewConsole = false
   Run = uFldNodeBroker  @ NewConsole = false
   Run = pRealm          @ NewConsole = false
+  Run = pGenPath        @ NewConsole = false
 }
  
 #include plug_uSimMarineV22.moos

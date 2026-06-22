@@ -89,12 +89,10 @@ Behavior=BHV_StationKeep
   condition = RETURN = false
   condition = DEPLOY = true
   condition = STATION = true
-  
-  duration = 60
-  endflag = STATION = false
-  perpetual = true
+  duration=60
   duration_idle_decay = false
-  
+  perpetual = true
+
   updates   = RETURN_UPDATE
   
 	center_activate = true 
@@ -104,8 +102,11 @@ Behavior=BHV_StationKeep
     transit_speed = 1.5
     station_pt = 0,0
     swing_time = 6 
-    endflag   = RETURN = false
+    
+  endflag   = RETURN = false
   endflag   = DEPLOY = true
+  endflag   = STATION = false
+  duration_reset = TIMER_RESET = true
  }
 //----------------------------------------------
 Behavior=BHV_StationKeep
@@ -115,15 +116,14 @@ Behavior=BHV_StationKeep
   condition = RETURN = true
   condition = DEPLOY = true
   condition = STATION = true
+  duration=60
+  duration_idle_decay = false
+  perpetual = true
   
-  duration = 60
-  endflag = STATION = false
+  updates   = RETURN_UPDATE
   endflag   = RETURN = true
   endflag   = DEPLOY = true
-  perpetual = true
-  updates   = RETURN_UPDATE
-  duration_idle_decay = false
-
+  endflag   = STATION = false
 	center_activate = true 
     inner_radius = 8
     outer_radius = 15
@@ -131,6 +131,7 @@ Behavior=BHV_StationKeep
     transit_speed = 1.5
     station_pt = 0,0
     swing_time = 6
+  duration_reset = TIMER_RESET = true
  }
 
 //----------------------------------------------

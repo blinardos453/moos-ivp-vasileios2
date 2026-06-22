@@ -23,8 +23,8 @@ GenPath::GenPath()
   m_nav_x = 0; m_nav_y = 0;    //4.1
   m_received_first = false;    //4.1
   m_received_last = false;     //4.1
+  m_path_generated = false; 
 }
-
 //---------------------------------------------------------
 // Destructor
 
@@ -62,27 +62,35 @@ bool GenPath::OnNewMail(MOOSMSG_LIST &NewMail)
       {
         m_point_pool.clear();
         m_received_first = true;
+        m_received_last = false;
+        m_path_generated = false;
       } 
       else if (sval == "lastpoint") 
       {
         m_received_last = true;
-        generatePath(); // Παραγωγή διαδρομής μόλις ληφθούν όλα [5]
+        //generatePath(); // Παραγωγή διαδρομής μόλις ληφθούν όλα [5]
       } 
       else 
       {
-       // XYPoint new_pt;
-       // if (new_pt.get_spec(sval)) m_point_pool.push_back(new_pt);   //4.1 set_spec 
+       //XYPoint new_pt;
+       //if (new_pt.get_spec(sval)) m_point_pool.push_back(new_pt);   //4.1 set_spec 
        
        XYPoint new_pt = string2Point(sval); 
-       if (new_pt.valid()) 
-        m_point_pool.push_back(new_pt);
+        
+       //double x = tokDoubleParse(sval, "x", ',');
+       //double y = tokDoubleParse(sval, "y", ',');
+       
+       if (new_pt.valid())
+       {
+         m_point_pool.push_back(new_pt);
+       }
       }
     } 
     
     else if (key == "NAV_X") m_nav_x = msg.GetDouble();
     else if (key == "NAV_Y") m_nav_y = msg.GetDouble();    //4.1 to
   
-    if(key == "FOO") 
+    else if(key == "FOO") 
      cout << "great!";
 
     else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
@@ -111,6 +119,8 @@ void GenPath::generatePath() {
   XYSegList tour;
   double cur_x = m_nav_x; // Ξεκινάμε από την τρέχουσα θέση [3]
   double cur_y = m_nav_y;
+
+  vector<XYPoint> points_copy = m_point_pool; // Αντιγραφή για να μην τροποποιηθεί το αρχικό pool
 
   while (!m_point_pool.empty()) {
     int best_index = -1;
@@ -146,7 +156,12 @@ void GenPath::generatePath() {
 bool GenPath::Iterate()
 {
   AppCastingMOOSApp::Iterate();
-  // Do your thing here!
+  
+  if (m_received_last && !m_path_generated) {
+    generatePath(); 
+    m_path_generated = true; // Use a member variable to prevent re-generating every 0.25s
+  }
+
   AppCastingMOOSApp::PostReport();
   return(true);
 }
@@ -198,7 +213,9 @@ bool GenPath::OnStartUp()
 void GenPath::registerVariables()
 {
   AppCastingMOOSApp::RegisterVariables();
-  // Register("FOOBAR", 0);
+  Register("VISIT_POINT", 0);
+  Register("NAV_X", 0);
+  Register("NAV_Y", 0);
 }
 
 
@@ -218,9 +235,9 @@ bool GenPath::buildReport()
   m_msgs << actab.getFormattedString();
 
   m_msgs << "Points in Pool: " << m_point_pool.size() << endl;           //4.1
- // m_msgs << "First Point Received: " << boolAlpha(m_received_first) << endl;  //4.1
- // m_msgs << "Last Point Received: " << boolAlpha(m_received_last) << endl;   //4.1
-
+ m_msgs << "Path Generated:      " << (m_path_generated ? "yes" : "no") << endl;
+  m_msgs << "Last Point Received: " << (m_received_last ? "yes" : "no") << endl;
+  
   return(true);
 }
 

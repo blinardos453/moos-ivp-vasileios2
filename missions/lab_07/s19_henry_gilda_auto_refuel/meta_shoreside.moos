@@ -20,7 +20,6 @@ Processconfig = ANTLER
   Run = pShare          @ NewConsole = false
   Run = pHostInfo       @ NewConsole = false
   Run = uFldShoreBroker @ NewConsole = false
-  Run = pRealm          @ NewConsole = false
   Run = uTimerScript    @ NewConsole = false
   Run = pPointAssign    @ NewConsole = false
   Run = uTimerScript    @ NewConsole = false
@@ -37,9 +36,34 @@ Processconfig = ANTLER
 ProcessConfig = pPointAssign 
 {
   AppTick = 4
+  CommsTick = 4
+
   vname = henry
   vname = gilda
-  assign_by_region = false
+  assign_by_region = true
+}
+
+//--------------------------------------------------
+// pRealm Configuration Block
+
+ProcessConfig = pRealm 
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  hist_var = VISIT_POINT
+}
+
+
+/--------------------------------------------------
+// pGenPath Configuration Block
+
+ProcessConfig = pGenPath
+{
+  AppTick   = 4
+  CommsTick = 4
+
+   
 }
 
 //--------------------------------------------------
@@ -69,6 +93,8 @@ ProcessConfig = uTimerScript
 {
   AppTick   = 4
   CommsTick = 4
+  
+  block_on = pPointAssign
 
  // Ορισμός τυχαίων μεταβλητών για τις συντεταγμένες X και Y [1, 4]
  // Χρησιμοποιούμε snap=1 για ακέραιες τιμές [5]
@@ -79,11 +105,11 @@ ProcessConfig = uTimerScript
  // Παραγωγή 100 τυχαίων σημείων χρησιμοποιώντας τις rand_var [6, 7]
  // Το $[TCOUNT] παρέχει ένα μοναδικό ID για κάθε σημείο [8]
 
-  event = var=VISIT_POINT, val="firstpoint", time=0   // Πρώτο μήνυμα ένδειξης έναρξης ακολουθίας [6]
+  event = var=VISIT_POINT, val="firstpoint", time=10   // Πρώτο μήνυμα ένδειξης έναρξης ακολουθίας [6]
   
-  event = var=VISIT_POINT, val="x=$[XVAL], y=$[YVAL], id=$[TCOUNT]", time=0, amt=100
+  event = var=VISIT_POINT, val="x=$[XVAL], y=$[YVAL], id=$[TCOUNT]", time=10, amt=100
 
-  event = var=VISIT_POINT, val="lastpoint", time=0   // Τελευταίο μήνυμα ένδειξης ολοκλήρωσης [6]
+  event = var=VISIT_POINT, val="lastpoint", time=10   // Τελευταίο μήνυμα ένδειξης ολοκλήρωσης [6]
 
  // Ρυθμίσεις επαναφοράς αν απαιτείται επανάληψη της διαδικασίας [9, 10]
   
@@ -116,7 +142,8 @@ ProcessConfig = pMarineViewer
   hash_viewable        = true
   hash_shade           = 0.35
 
-  scope = PHI_HOST_INFO
+  //scope = PHI_HOST_INFO
+  scope = ODOMETRY_DIST
 
   button_one   = DEPLOY  # DEPLOY_ALL=true # REF_POSI_ALL=false
   button_one   = MOOS_MANUAL_OVERRIDE_ALL=false 
@@ -127,5 +154,5 @@ ProcessConfig = pMarineViewer
 
   button_three = STATION  # STATION_KEEP_ALL=true
 
-  button_four = REFUEL # REFUEL_NEEDED_ALL=true # LOITER=false
+  button_four = REFUEL # REFUEL_NEEDED_ALL=true # SURVEY=false
 }
