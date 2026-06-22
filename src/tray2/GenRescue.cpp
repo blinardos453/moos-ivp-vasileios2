@@ -85,7 +85,7 @@ bool GenRescue::Iterate()
   
   //if(m_plan_pending)
   if((m_iteration % 20) == 0)
-   // postShortestPath();
+    postShortestPath();
 
   AppCastingMOOSApp::PostReport();
   return(true);
@@ -122,8 +122,6 @@ void GenRescue::RegisterVariables()
   AppCastingMOOSApp::RegisterVariables();
   Register("SWIMMER_ALERT", 0);
   Register("FOUND_SWIMMER", 0);
-  Register("NAV_X", 0);
-  Register("NAV_Y", 0);
 }
 
 
@@ -132,36 +130,6 @@ void GenRescue::RegisterVariables()
 
 bool GenRescue::handleMailNewSwimmer(string str)
 {
-  string sx  = tokStringParse(str, "x", ',', '=');
-  string sy  = tokStringParse(str, "y", ',', '=');
-  string sid = tokStringParse(str, "id", ',', '=');
-
-  if((sx == "") || (sy == "") || (sid == ""))
-    return(false);
-
-  double x = atof(sx.c_str());
-  double y = atof(sy.c_str());
-
-  // Ignore swimmers we already know about.
-  // Ignore swimmers already rescued/found.
-  if(m_found_ids.count(sid) != 0)
-    return(true);
-
-  // Ignore swimmers we already know about.
-  if(m_map_pts.count(sid) != 0)
-    return(true);
-
-  XYPoint pt(x, y);
-  pt.set_label(sid);
-
-  m_map_pts[sid] = pt;
-
-  // Force the path to be rebuilt using the new swimmer list.
-  m_path.clear();
-
-  postShortestPath();
-
-  reportEvent("New swimmer alert: id=" + sid + ", x=" + sx + ", y=" + sy);
   return(true);
 }
 
@@ -170,47 +138,45 @@ bool GenRescue::handleMailNewSwimmer(string str)
 
 bool GenRescue::handleMailFoundSwimmer(string str)
 {
-  string sid = tokStringParse(str, "id", ',', '=');
-
-  if(sid == "")
-    return(false);
-
-  m_found_ids.insert(sid);
-
-  if(m_map_pts.count(sid) != 0)
-    m_map_pts.erase(sid);
-
-  m_path.clear();
-  postShortestPath();
-
-  reportEvent("Found swimmer removed from path: id=" + sid);
   return(true);
 }
+
 //---------------------------------------------------------
 // Procedure: postShortestPath()
 
 void GenRescue::postShortestPath()
 {
-  if(m_map_pts.size() == 0)
-    return;
+  // If path has not been set, determine a random path of 9
+  // points, and make a greedy path from ownship start position.
+  // Once it has been set, don't change it. But keep posting it
+  // once every 20 iterations.
+  
+  if(m_path.size() == 0) {
+    XYFieldGenerator generator;
+    generator.addPolygon("-184,-5:-188, -14:-130,-44:-106,-3");
+    generator.addPolygon("-85,-3:-89,-8:-51,-1");
+    generator.addPolygon("-78,-74:-54,-32:-104,-53");
+    generator.setBufferDist(7);
+    generator.setMaxTries(1000);
+    generator.generatePoints(9);
+    
+    vector<XYPoint> pts = generator.getPoints();
+    
+    for(unsigned int i=0; i<pts.size(); i++) {
+      XYPoint pt = pts[i];
+      m_path.add_vertex(pt.x(), pt.y());
+    }
+    // Seglist needs a name, refer when drawging and erasing
+    m_path.set_label("one");    
+    XYSegList segl;
+    segl.add_vertex(m_nav_x, m_nav_y);
 
-  XYSegList new_path;
-
-  map<string, XYPoint>::iterator p;
-  for(p = m_map_pts.begin(); p != m_map_pts.end(); p++) {
-    XYPoint pt = p->second;
-    new_path.add_vertex(pt.x(), pt.y());
+    m_path = greedyPath(m_path, m_nav_x, m_nav_y);
+    
+    // Seglist needs a name, refer when drawging and erasing
+    segl.set_label("one");
   }
-
-  if(m_nav_x_set && m_nav_y_set)
-    new_path = greedyPath(new_path, m_nav_x, m_nav_y);
-  else
-    new_path = greedyPath(new_path, 0, 0);
-
-  new_path.set_label("rescue_path");
-
-  m_path = new_path;
-
+  
   Notify("VIEW_SEGLIST", m_path.get_spec());
 
   string update_var = "SURVEY_UPDATE";

@@ -11,7 +11,6 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <set>
 #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"
 #include "XYPoint.h"
 #include "XYPolygon.h"
@@ -41,10 +40,7 @@ class GenRescue : public AppCastingMOOSApp
   std::string m_vname;
   
  private: // State variables
- XYSegList  m_path;
- std::map<std::string, XYPoint> m_map_pts;
- std::set<std::string> m_found_ids;
-
+  XYSegList  m_path;
   double     m_nav_x;
   double     m_nav_y;
   bool       m_nav_x_set;
