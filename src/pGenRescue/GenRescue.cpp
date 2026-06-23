@@ -15,6 +15,9 @@
 #include "PathUtils.h"
 #include "XYFormatUtilsPoly.h"
 #include "XYFieldGenerator.h"
+#include <vector>  //
+#include <cmath>   //
+#include <float.h>  //
 
 using namespace std;
 
@@ -191,21 +194,84 @@ bool GenRescue::handleMailFoundSwimmer(string str)
 
 void GenRescue::postShortestPath()
 {
-  if(m_map_pts.size() == 0)
+  // if(m_map_pts.size() == 0)
+  //   return;
+
+  // XYSegList new_path;
+
+  // map<string, XYPoint>::iterator p;
+  // for(p = m_map_pts.begin(); p != m_map_pts.end(); p++) {
+  //   XYPoint pt = p->second;
+  //   new_path.add_vertex(pt.x(), pt.y());
+  // }
+
+  // if(m_nav_x_set && m_nav_y_set)
+  //   new_path = greedyPath(new_path, m_nav_x, m_nav_y);
+  // else
+  //   new_path = greedyPath(new_path, 0, 0);
+
+  if(m_map_pts.empty())
     return;
 
-  XYSegList new_path;
-
-  map<string, XYPoint>::iterator p;
+  // 1. Gather all current unvisited points from the map into a vector for easier processing
+  std::vector<XYPoint> unvisited;
+  std::map<std::string, XYPoint>::iterator p;
   for(p = m_map_pts.begin(); p != m_map_pts.end(); p++) {
-    XYPoint pt = p->second;
-    new_path.add_vertex(pt.x(), pt.y());
+    unvisited.push_back(p->second);
   }
 
-  if(m_nav_x_set && m_nav_y_set)
-    new_path = greedyPath(new_path, m_nav_x, m_nav_y);
-  else
-    new_path = greedyPath(new_path, 0, 0);
+  // 2. Determine starting position
+  double cur_x = 0;
+  double cur_y = 0;
+  if(m_nav_x_set && m_nav_y_set) {
+    cur_x = m_nav_x;
+    cur_y = m_nav_y;
+  }
+
+  // 3. Generate the path using the two-vertex-look-ahead algorithm
+  XYSegList new_path;
+  
+  while(!unvisited.empty()) {
+    int best_index = -1;
+    double min_total_score = -1;
+
+    for(unsigned int i=0; i<unvisited.size(); i++) {
+      // Leg 1: Distance from vehicle's current/last point to candidate A
+      double d1 = hypot(cur_x - unvisited[i].x(), cur_y - unvisited[i].y());
+      
+      // Leg 2: Distance from candidate A to its nearest unvisited neighbor B
+      double d2 = 0;
+      bool found_neighbor = false;
+      for(unsigned int j=0; j<unvisited.size(); j++) {
+        if(i == j) continue;
+        double dist_to_neighbor = hypot(unvisited[i].x() - unvisited[j].x(), 
+                                        unvisited[i].y() - unvisited[j].y());
+        if(!found_neighbor || dist_to_neighbor < d2) {
+          d2 = dist_to_neighbor;
+          found_neighbor = true;
+        }
+      }
+      
+      // Two-vertex evaluation score
+      double total_score = d1 + d2;
+
+      if(best_index == -1 || total_score < min_total_score) {
+        min_total_score = total_score;
+        best_index = i;
+      }
+    }
+
+    // Add the best candidate found to the path
+    if(best_index != -1) {
+      new_path.add_vertex(unvisited[best_index].x(), unvisited[best_index].y());
+      cur_x = unvisited[best_index].x();
+      cur_y = unvisited[best_index].y();
+      unvisited.erase(unvisited.begin() + best_index);
+    }
+  }
+
+
+// Koino Meros toy Kvdika
 
   new_path.set_label("rescue_path");
 
@@ -218,6 +284,9 @@ void GenRescue::postShortestPath()
 
   Notify(update_var, update_str);
   reportEvent("SURVEY_UPDATE=" + update_str);
+
+
+
 }
 
 //---------------------------------------------------------
