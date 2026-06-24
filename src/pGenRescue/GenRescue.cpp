@@ -247,6 +247,7 @@ void GenRescue::postShortestPath()
         double dist_to_neighbor = hypot(unvisited[i].x() - unvisited[j].x(), 
                                         unvisited[i].y() - unvisited[j].y());
         if(!found_neighbor || dist_to_neighbor < d2) {
+          
           d2 = dist_to_neighbor;
           found_neighbor = true;
         }
