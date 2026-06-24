@@ -18,6 +18,8 @@
 #include <vector>  //
 #include <cmath>   //
 #include <float.h>  //
+#include "NodeRecord.h"
+#include "NodeRecordUtils.h"
 
 using namespace std;
 
@@ -58,6 +60,15 @@ bool GenRescue::OnNewMail(MOOSMSG_LIST &NewMail)
     else if(key == "NAV_Y") {
       m_nav_y = msg.GetDouble();
       m_nav_y_set = true;
+    }
+    
+    else if (key == "NODE_REPORT") 
+    {
+     NodeRecord record = string2NodeRecord(msg.GetString());
+     m_adv_x = record.getX();
+     m_adv_y = record.getY();
+     m_adv_hdg = record.getHeading();
+     m_adv_set = true;
     }
 
     else if(key != "APPCAST_REQ") // handle by AppCastingMOOSApp
@@ -112,6 +123,8 @@ bool GenRescue::OnStartUp()
     if(param == "vname")
       m_vname = value;
   }
+  
+  Register("NODE_REPORT", 0);
   
   RegisterVariables();	
   return(true);
@@ -217,7 +230,18 @@ void GenRescue::postShortestPath()
   std::vector<XYPoint> unvisited;
   std::map<std::string, XYPoint>::iterator p;
   for(p = m_map_pts.begin(); p != m_map_pts.end(); p++) {
-    unvisited.push_back(p->second);
+   XYPoint pt = p->second;
+    bool concede = false;
+
+    if (m_adv_set) {
+      double dist_to_adv = hypot(pt.x() - m_adv_x, pt.y() - m_adv_y);
+      if (dist_to_adv < 15.0) 
+        concede = true; // Strategy: Concede swimmers closest to adversary [2]
+    }
+
+    if (!concede)
+      unvisited.push_back(pt);
+
   }
 
   // 2. Determine starting position
@@ -279,11 +303,13 @@ void GenRescue::postShortestPath()
   m_path = new_path;
 
   Notify("VIEW_SEGLIST", m_path.get_spec());
-
-  string update_var = "SURVEY_UPDATE";
+ 
+  
+  
+  //string update_var = "SURVEY_UPDATE";
   string update_str = "points = " + m_path.get_spec_pts();
-
-  Notify(update_var, update_str);
+Notify("SURVEY_UPDATE", update_str);
+  //Notify(update_var, update_str);
   reportEvent("SURVEY_UPDATE=" + update_str);
 
 

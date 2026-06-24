@@ -15,6 +15,8 @@
 #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"
 #include "XYPoint.h"
 #include "XYPolygon.h"
+#include "NodeRecord.h"
+#include "NodeRecordUtils.h"
 
 class GenRescue : public AppCastingMOOSApp
 {
@@ -49,6 +51,12 @@ class GenRescue : public AppCastingMOOSApp
   double     m_nav_y;
   bool       m_nav_x_set;
   bool       m_nav_y_set;    
+
+  bool   m_adv_set;
+  double m_adv_x;
+  double m_adv_y;
+  double m_adv_hdg;
+
 };
 
 #endif 
