@@ -33,7 +33,8 @@ TARGET_LINK_LIBRARIES(BHV_Scout
    ivpbuild 
    logic 
    ivpcore 
-   bhvutil 
+   bhvutil
+   contacts
    geometry
   ${MBUTIL_LINK}
   ${MOOS_LIBRARIES}
