@@ -15,6 +15,9 @@
 #include "ZAIC_PEAK.h"
 #include "OF_Coupler.h"
 #include "XYFormatUtilsPoly.h"
+#include "NodeRecord.h"      //
+#include "NodeRecordUtils.h" //
+#include "XYPolygon.h"      // 
 
 using namespace std;
 
@@ -40,7 +43,14 @@ BHV_Scout::BHV_Scout(IvPDomain gdomain) :
   addInfoVars("NAV_X, NAV_Y");
   addInfoVars("RESCUE_REGION");
   addInfoVars("SCOUTED_SWIMMER");
+
+ addInfoVars("NODE_REPORT"); // Needed to track the rescuer [5]
+
+  // Initialize random seed once in the constructor
+  srand(time(NULL)); //
+
 }
+  
 
 //---------------------------------------------------------------
 // Procedure: setParam() - handle behavior configuration parameters
@@ -50,17 +60,32 @@ bool BHV_Scout::setParam(string param, string val)
   // Convert the parameter to lower case for more general matching
   param = tolower(param);
   
-  bool handled = true;
-  if(param == "capture_radius")
-    handled = setPosDoubleOnString(m_capture_radius, val);
-  else if(param == "desired_speed")
-    handled = setPosDoubleOnString(m_desired_speed, val);
-  else if(param == "tmate")
-    handled = setNonWhiteVarOnString(m_tmate, val);
-  else
-    handled = false;
+  // bool handled = true;
+  // if(param == "capture_radius")
+  //   handled = setPosDoubleOnString(m_capture_radius, val);
+  // else if(param == "desired_speed")
+  //   handled = setPosDoubleOnString(m_desired_speed, val);
+  // else if(param == "tmate")
+  //   handled = setNonWhiteVarOnString(m_tmate, val);
+  // else
+  //   handled = false;
 
-  srand(time(NULL));
+  // srand(time(NULL));
+
+  bool handled = true;
+  if((param == "rescuer_name") || (param == "tmate")) {
+    m_rescuer_name = val;
+  }
+  else if(param == "capture_radius") {
+    handled = setPosDoubleOnString(m_capture_radius, val);
+  }
+  else if(param == "desired_speed") {
+    handled = setPosDoubleOnString(m_desired_speed, val);
+  }
+  else {
+    // If not handled here, pass it to the base class [2, 3]
+    return(IvPBehavior::setParam(param, val)); 
+  }
   
   return(handled);
 }
@@ -133,16 +158,53 @@ IvPFunction *BHV_Scout::onRunState()
 //-----------------------------------------------------------
 // Procedure: updateScoutPoint()
 
+// void BHV_Scout::updateScoutPoint()
+// {
+//   if(m_pt_set)
+//     return;
+
+//   string region_str = getBufferStringVal("RESCUE_REGION");
+//   if(region_str == "")
+//     postWMessage("Unknown RESCUE_REGION");
+//   else
+//     postRetractWMessage("Unknown RESCUE_REGION");
+
+//   XYPolygon region = string2Poly(region_str);
+//   if(!region.is_convex()) {
+//     postWMessage("Badly formed RESCUE_REGION");
+//     return;
+//   }
+//   m_rescue_region = region;
+  
+//   cout << "updateScoutPoint(): " << endl;
+  
+//   double ptx = 0;
+//   double pty = 0;
+//   bool ok = randPointInPoly(m_rescue_region, ptx, pty);
+//   if(!ok) {
+//     postWMessage("Unable to generate scout point");
+//     return;
+//   }
+    
+//   m_ptx = ptx;
+//   m_pty = pty;
+//   m_pt_set = true;
+//   string msg = "New pt: " + doubleToStringX(ptx) + "," + doubleToStringX(pty);
+//   postEventMessage(msg);
+// }
+
 void BHV_Scout::updateScoutPoint()
 {
   if(m_pt_set)
     return;
 
-  string region_str = getBufferStringVal("RESCUE_REGION");
-  if(region_str == "")
+  // 1. Retrieve the RESCUE_REGION
+  bool ok_val;
+  string region_str = getBufferStringVal("RESCUE_REGION", ok_val); // [6, 7]
+  if(!ok_val || region_str == "") {
     postWMessage("Unknown RESCUE_REGION");
-  else
-    postRetractWMessage("Unknown RESCUE_REGION");
+    return;
+  }
 
   XYPolygon region = string2Poly(region_str);
   if(!region.is_convex()) {
@@ -151,22 +213,61 @@ void BHV_Scout::updateScoutPoint()
   }
   m_rescue_region = region;
   
-  cout << "updateScoutPoint(): " << endl;
+  // 2. Determine Rescuer's Position from NODE_REPORTs
+  double rx = 0;
+  bool rescuer_found = false;
+  bool ok_reports;
+  vector<string> reports = getBufferStringVector("NODE_REPORT", ok_reports); // [6]
   
+  if(ok_reports) {
+    for(unsigned int i=0; i<reports.size(); i++) {
+      NodeRecord record = string2NodeRecord(reports[i]); // [2]
+      if(record.getName() == m_rescuer_name) {
+        rx = record.getX();
+        rescuer_found = true;
+      }
+    }
+  }
+
+  // 3. Find the Center (Centroid) X-coordinate of the Region
+  unsigned int num_vertices = m_rescue_region.size();
+  if(num_vertices == 0) return;
+  
+  double sum_x = 0;
+  for(unsigned int i=0; i<num_vertices; i++)
+    sum_x += m_rescue_region.get_vx(i);
+  double cx = sum_x / (double)num_vertices;
+
+  // 4. Generate a point on the opposite side relative to rescuer
   double ptx = 0;
   double pty = 0;
-  bool ok = randPointInPoly(m_rescue_region, ptx, pty);
-  if(!ok) {
-    postWMessage("Unable to generate scout point");
+  bool point_ok = false;
+  int attempts = 0;
+  
+  while(!point_ok && (attempts < 100)) {
+    if(randPointInPoly(m_rescue_region, ptx, pty)) {
+      if(!rescuer_found) {
+        point_ok = true; // Fallback if rescuer not yet detected
+      } else {
+        // Opposite side logic: Pick a point where (ptx - cx) has opposite sign of (rx - cx)
+        if ((rx > cx && ptx < cx) || (rx <= cx && ptx > cx))
+          point_ok = true; 
+      }
+    }
+    attempts++;
+  }
+
+  if(!point_ok) {
+    postWMessage("Unable to generate valid scout point on opposite side");
     return;
   }
     
   m_ptx = ptx;
   m_pty = pty;
   m_pt_set = true;
-  string msg = "New pt: " + doubleToStringX(ptx) + "," + doubleToStringX(pty);
-  postEventMessage(msg);
+  postEventMessage("New Scout Pt: " + doubleToStringX(ptx) + "," + doubleToStringX(pty));
 }
+
 
 //-----------------------------------------------------------
 // Procedure: postViewPoint()

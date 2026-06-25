@@ -26,6 +26,7 @@
 #include <string>
 #include "IvPBehavior.h"
 #include "XYPoint.h"
+#include "NodeRecord.h"//
 #include "XYPolygon.h"
 
 class BHV_Scout : public IvPBehavior {
@@ -42,8 +43,11 @@ protected:
   IvPFunction* buildFunction();
   void         updateScoutPoint();
   void         postViewPoint(bool viewable=true);
-
+ 
 protected: // State variables
+  
+  std::string m_rescuer_name; // Add this line to store the boat name  
+
   double   m_osx;
   double   m_osy;
   double   m_curr_time;
